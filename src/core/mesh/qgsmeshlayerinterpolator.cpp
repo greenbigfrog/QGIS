@@ -154,7 +154,7 @@ QgsRasterBlock *QgsMeshLayerInterpolator::block( int, const QgsRectangle &extent
       for ( int k = leftLim; k <= rightLim; k++ )
       {
         double val;
-        const QgsPointXY p = mContext.mapToPixel().toMapCoordinates( k / pixelRatio, j / pixelRatio );
+        const QgsPointXY p = mContext.mapToPixel().toMapCoordinates( ( k + 0.5 ) / pixelRatio, ( j + 0.5 ) / pixelRatio );
         if ( mDataType == QgsMeshDatasetGroupMetadata::DataType::DataOnVertices )
           val = QgsMeshLayerUtils::interpolateFromVerticesData( p1, p2, p3, value1, value2, value3, p );
         else

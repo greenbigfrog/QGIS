@@ -82,8 +82,8 @@ void TestQgsMeshLayerInterpolator::testExportRasterBand()
   QVERIFY( block->hasNoDataValue() );
   QVERIFY( block->hasNoData() );
 
-  QCOMPARE( block->value( 0, 0 ), 10.0 );
-  QCOMPARE( block->value( 5, 5 ), 35.0 );
+  QCOMPARE( block->value( 0, 0 ), 12.5 );
+  QCOMPARE( block->value( 5, 5 ), 34.5 );
   QVERIFY( block->isNoData( 10, 10 ) );
 
   auto virtualGroup = std::make_unique<QgsMeshMemoryDatasetGroup>( u"on face"_s, QgsMeshDatasetGroupMetadata::DataOnFaces );
