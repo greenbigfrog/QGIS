@@ -65,6 +65,7 @@
 #include "qgsstyle.h"
 #include "qgssymbolselectordialog.h"
 #include "qgsterrainprovider.h"
+#include "qgsunittypes.h"
 #include "qgsvectorlayerelevationproperties.h"
 
 #include <QActionGroup>
@@ -75,6 +76,9 @@
 #include <QString>
 #include <QTimer>
 #include <QToolBar>
+
+#include <cmath>
+#include <limits>
 
 #include "moc_qgselevationprofilewidget.cpp"
 
@@ -409,6 +413,20 @@ QgsElevationProfileWidget::QgsElevationProfileWidget( QgsElevationProfile *profi
 
   mOptionsMenu->addAction( mToleranceSettingsAction );
 
+  mStepDistanceSettingsAction = new QgsElevationProfileStepDistanceWidgetSettingsAction( mOptionsMenu );
+  mStepDistanceSettingsAction->setDistanceUnit( QgsProject::instance()->crs3D().mapUnits() );
+  mStepDistanceSettingsAction->stepDistanceSpinBox()->setValue( std::isnan( mProfile->stepDistance() ) ? 0 : mProfile->stepDistance() );
+  connect( mStepDistanceSettingsAction->stepDistanceSpinBox(), qOverload<double>( &QDoubleSpinBox::valueChanged ), this, [this]( double value ) {
+    const double stepDistance = value > 0 ? value : std::numeric_limits<double>::quiet_NaN();
+    if ( mProfile )
+    {
+      mProfile->setStepDistance( stepDistance );
+      mCanvas->setStepDistance( mProfile->stepDistance() );
+    }
+    scheduleUpdate();
+  } );
+  mOptionsMenu->addAction( mStepDistanceSettingsAction );
+
   mDistanceUnitMenu = new QMenu( tr( "Distance Units" ), this );
   QActionGroup *unitGroup = new QActionGroup( this );
   for ( Qgis::DistanceUnit unit : {
@@ -584,6 +602,9 @@ QgsElevationProfileWidget::QgsElevationProfileWidget( QgsElevationProfile *profi
 
   connect( QgsProject::instance()->elevationProperties(), &QgsProjectElevationProperties::changed, this, &QgsElevationProfileWidget::onProjectElevationPropertiesChanged );
   connect( QgsProject::instance(), &QgsProject::crs3DChanged, this, &QgsElevationProfileWidget::onProjectElevationPropertiesChanged );
+  connect( QgsProject::instance(), &QgsProject::crs3DChanged, this, [this] {
+    mStepDistanceSettingsAction->setDistanceUnit( QgsProject::instance()->crs3D().mapUnits() );
+  } );
   mCanvas->setCrs( QgsProject::instance()->crs3D() );
 
   connect( mCanvas, &QgsElevationProfileCanvas::scaleChanged, this, [this] {
@@ -1003,6 +1024,7 @@ void QgsElevationProfileWidget::onCanvasPointHovered( const QgsPointXY &, const 
 void QgsElevationProfileWidget::updatePlot()
 {
   mCanvas->setTolerance( mToleranceSettingsAction->toleranceSpinBox()->value() );
+  mCanvas->setStepDistance( mProfile->stepDistance() );
   mCanvas->setCrs( QgsProject::instance()->crs3D() );
   showSubsectionsTriggered();
 
@@ -1200,6 +1222,7 @@ void QgsElevationProfileWidget::exportResults( Qgis::ProfileExportType type )
   QgsProfileRequest request( profileCurve.release() );
   request.setCrs( QgsProject::instance()->crs3D() );
   request.setTolerance( mToleranceSettingsAction->toleranceSpinBox()->value() );
+  request.setStepDistance( mProfile->stepDistance() );
   request.setTransformContext( QgsProject::instance()->transformContext() );
   request.setTerrainProvider( QgsProject::instance()->elevationProperties()->terrainProvider() ? QgsProject::instance()->elevationProperties()->terrainProvider()->clone() : nullptr );
   QgsExpressionContext context;
@@ -1521,6 +1544,39 @@ QgsElevationProfileToleranceWidgetSettingsAction::QgsElevationProfileToleranceWi
   QWidget *w = new QWidget();
   w->setLayout( gLayout );
   setDefaultWidget( w );
+}
+
+
+//
+// QgsElevationProfileStepDistanceWidgetSettingsAction
+//
+
+QgsElevationProfileStepDistanceWidgetSettingsAction::QgsElevationProfileStepDistanceWidgetSettingsAction( QWidget *parent )
+  : QWidgetAction( parent )
+{
+  QGridLayout *gLayout = new QGridLayout();
+  gLayout->setContentsMargins( 3, 2, 3, 2 );
+
+  mStepDistanceWidget = new QgsDoubleSpinBox();
+  mStepDistanceWidget->setClearValueMode( QgsDoubleSpinBox::MinimumValue, tr( "Automatic" ) );
+  mStepDistanceWidget->setKeyboardTracking( false );
+  mStepDistanceWidget->setMaximumWidth( QFontMetrics( mStepDistanceWidget->font() ).horizontalAdvance( '0' ) * 50 );
+  mStepDistanceWidget->setDecimals( 2 );
+  mStepDistanceWidget->setRange( 0, 9999999999 );
+  mStepDistanceWidget->setSingleStep( 1.0 );
+
+  QLabel *label = new QLabel( tr( "Sampling Step" ) );
+  gLayout->addWidget( label, 0, 0 );
+  gLayout->addWidget( mStepDistanceWidget, 0, 1 );
+
+  QWidget *w = new QWidget();
+  w->setLayout( gLayout );
+  setDefaultWidget( w );
+}
+
+void QgsElevationProfileStepDistanceWidgetSettingsAction::setDistanceUnit( Qgis::DistanceUnit unit )
+{
+  mStepDistanceWidget->setSuffix( unit == Qgis::DistanceUnit::Unknown ? QString() : u" %1"_s.arg( QgsUnitTypes::toAbbreviatedString( unit ) ) );
 }
 
 

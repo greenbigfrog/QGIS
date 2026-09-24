@@ -22,6 +22,8 @@
 
 #include <QString>
 
+#include <cmath>
+
 #include "moc_qgselevationprofile.cpp"
 
 using namespace Qt::StringLiterals;
@@ -43,6 +45,8 @@ QDomElement QgsElevationProfile::writeXml( QDomDocument &document, const QgsRead
   profileElem.setAttribute( u"distanceUnit"_s, qgsEnumValueToKey( mDistanceUnit ) );
 
   profileElem.setAttribute( u"tolerance"_s, mTolerance );
+  if ( std::isfinite( mStepDistance ) )
+    profileElem.setAttribute( u"stepDistance"_s, mStepDistance );
   if ( mLockAxisScales )
     profileElem.setAttribute( u"lockAxisScales"_s, u"1"_s );
 
@@ -115,6 +119,8 @@ bool QgsElevationProfile::readXml( const QDomElement &element, const QDomDocumen
   }
 
   mTolerance = element.attribute( u"tolerance"_s ).toDouble();
+  const double stepDistance = element.attribute( u"stepDistance"_s ).toDouble();
+  mStepDistance = element.hasAttribute( u"stepDistance"_s ) && std::isfinite( stepDistance ) && stepDistance > 0 ? stepDistance : std::numeric_limits<double>::quiet_NaN();
   mLockAxisScales = element.attribute( u"lockAxisScales"_s, u"0"_s ).toInt();
 
   setUseProjectLayerTree( element.attribute( u"useProjectLayerTree"_s, u"0"_s ).toInt() );
@@ -195,6 +201,24 @@ void QgsElevationProfile::setTolerance( double tolerance )
 double QgsElevationProfile::tolerance() const
 {
   return mTolerance;
+}
+
+void QgsElevationProfile::setStepDistance( double distance )
+{
+  if ( !std::isnan( distance ) && ( !std::isfinite( distance ) || distance <= 0 ) )
+    return;
+
+  if ( ( std::isnan( distance ) && std::isnan( mStepDistance ) ) || qgsDoubleNear( distance, mStepDistance ) )
+    return;
+
+  mStepDistance = distance;
+  dirtyProject();
+  emit stepDistanceChanged( mStepDistance );
+}
+
+double QgsElevationProfile::stepDistance() const
+{
+  return mStepDistance;
 }
 
 bool QgsElevationProfile::lockAxisScales() const

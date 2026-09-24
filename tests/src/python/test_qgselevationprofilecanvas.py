@@ -10,9 +10,12 @@ __author__ = "Nyall Dawson"
 __date__ = "28/3/2022"
 __copyright__ = "Copyright 2022, The QGIS Project"
 
+import math
 import unittest
 
 from qgis.core import (
+    QgsAbstractProfileSource,
+    QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsLineString,
     QgsPoint,
@@ -25,6 +28,22 @@ from qgis.PyQt.QtGui import QKeyEvent, QMouseEvent, QWheelEvent
 from qgis.testing import QgisTestCase, start_app
 
 app = start_app()
+
+
+class CapturingProfileSource(QgsAbstractProfileSource):
+    def __init__(self):
+        super().__init__()
+        self.step_distance = None
+
+    def createProfileGenerator(self, request):
+        self.step_distance = request.stepDistance()
+        return None
+
+    def profileSourceName(self):
+        return "Capturing profile source"
+
+    def profileSourceId(self):
+        return "capturing-profile-source"
 
 
 class TestTool(QgsPlotTool):
@@ -93,6 +112,28 @@ class TestQgsElevationProfileCanvas(QgisTestCase):
         ls.fromWkt("LineString(1 2, 3 4)")
         canvas.setProfileCurve(ls)
         self.assertEqual(canvas.profileCurve().asWkt(), "LineString (1 2, 3 4)")
+
+    def testRefreshUsesStepDistance(self):
+        canvas = QgsElevationProfileCanvas()
+        canvas.setProject(QgsProject.instance())
+        canvas.setCrs(QgsCoordinateReferenceSystem("EPSG:3111"))
+        curve = QgsLineString()
+        curve.fromWkt("LineString(1 2, 3 4)")
+        canvas.setProfileCurve(curve)
+        self.assertTrue(math.isnan(canvas.stepDistance()))
+        canvas.setStepDistance(2.5)
+        self.assertEqual(canvas.stepDistance(), 2.5)
+
+        source = CapturingProfileSource()
+        registry = QgsApplication.profileSourceRegistry()
+        self.assertTrue(registry.registerProfileSource(source))
+        try:
+            canvas.setSources([source])
+            canvas.refresh()
+            self.assertEqual(source.step_distance, 2.5)
+        finally:
+            canvas.setSources([])
+            registry.unregisterProfileSource(source)
 
     def testToFromMapCoordinates(self):
         """

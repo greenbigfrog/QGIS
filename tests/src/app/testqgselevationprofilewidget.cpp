@@ -18,11 +18,14 @@
 #include "qgsabstractprofilesource.h"
 #include "qgselevationprofile.h"
 #include "qgselevationprofilecanvas.h"
+#include "qgsdoublespinbox.h"
 #include "qgslayertree.h"
 #include "qgsprofilesourceregistry.h"
 #include "qgstest.h"
 
 #include <QString>
+
+#include <cmath>
 
 using namespace Qt::StringLiterals;
 
@@ -57,6 +60,7 @@ class TestQgsAppElevationProfileWidget : public QObject
     void registerCustomProfileInSyncMode();
     void registerCustomProfileInNonSyncMode();
     void registerCustomProfileAndToggleSyncMode();
+    void stepDistance();
 
   private:
     QgisApp *mQgisApp = nullptr;
@@ -262,6 +266,24 @@ void TestQgsAppElevationProfileWidget::registerCustomProfileAndToggleSyncMode()
 
   // Unregister the custom profile
   QVERIFY( QgsApplication::profileSourceRegistry()->unregisterProfileSource( u"my-dummy-profile"_s ) );
+}
+
+void TestQgsAppElevationProfileWidget::stepDistance()
+{
+  auto profile = std::make_unique< QgsElevationProfile >( QgsProject::instance() );
+  QgsElevationProfileWidget::applyDefaultSettingsToProfile( profile.get() );
+  auto profileWidget = std::make_unique< QgsElevationProfileWidget >( profile.get(), mQgisApp->mapCanvas() );
+
+  QVERIFY( std::isnan( profile->stepDistance() ) );
+  QCOMPARE( profileWidget->mStepDistanceSettingsAction->stepDistanceSpinBox()->value(), 0 );
+
+  profileWidget->mStepDistanceSettingsAction->stepDistanceSpinBox()->setValue( 2.5 );
+  QCOMPARE( profile->stepDistance(), 2.5 );
+  QCOMPARE( profileWidget->profileCanvas()->stepDistance(), 2.5 );
+
+  profileWidget->mStepDistanceSettingsAction->stepDistanceSpinBox()->setValue( 0 );
+  QVERIFY( std::isnan( profile->stepDistance() ) );
+  QVERIFY( std::isnan( profileWidget->profileCanvas()->stepDistance() ) );
 }
 
 QGSTEST_MAIN( TestQgsAppElevationProfileWidget )

@@ -47,6 +47,7 @@ class QgsPlotToolZoom;
 class QgsPlotToolXAxisZoom;
 class QgsDoubleSpinBox;
 class QgsElevationProfileToleranceWidgetSettingsAction;
+class QgsElevationProfileStepDistanceWidgetSettingsAction;
 class QgsElevationProfileScaleRatioWidgetSettingsAction;
 class QgsLayerTree;
 class QgsLayerTreeRegistryBridge;
@@ -217,6 +218,7 @@ class APP_EXPORT QgsElevationProfileWidget : public QWidget
     QgsElevationProfileToolIdentify *mIdentifyTool = nullptr;
 
     QgsElevationProfileToleranceWidgetSettingsAction *mToleranceSettingsAction = nullptr;
+    QgsElevationProfileStepDistanceWidgetSettingsAction *mStepDistanceSettingsAction = nullptr;
     int mBlockScaleRatioChanges = 0;
     QgsElevationProfileScaleRatioWidgetSettingsAction *mScaleRatioSettingsAction = nullptr;
 
@@ -242,6 +244,18 @@ class QgsElevationProfileToleranceWidgetSettingsAction : public QWidgetAction
 
   private:
     QgsDoubleSpinBox *mToleranceWidget = nullptr;
+};
+
+class QgsElevationProfileStepDistanceWidgetSettingsAction : public QWidgetAction
+{
+  public:
+    QgsElevationProfileStepDistanceWidgetSettingsAction( QWidget *parent = nullptr );
+
+    QgsDoubleSpinBox *stepDistanceSpinBox() { return mStepDistanceWidget; }
+    void setDistanceUnit( Qgis::DistanceUnit unit );
+
+  private:
+    QgsDoubleSpinBox *mStepDistanceWidget = nullptr;
 };
 
 class QgsElevationProfileScaleRatioWidgetSettingsAction : public QWidgetAction

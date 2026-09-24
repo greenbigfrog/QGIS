@@ -11,6 +11,7 @@
 
 
 
+
 class QgsElevationProfileCanvas : QgsPlotCanvas
 {
 %Docstring(signature="appended")
@@ -177,6 +178,32 @@ actual profile curve a point can reside within to be included in the
 results.
 
 .. seealso:: :py:func:`setTolerance`
+%End
+
+    void setStepDistance( double distance );
+%Docstring
+Sets the profile step ``distance`` (in
+:py:func:`~QgsElevationProfileCanvas.crs` units).
+
+A NaN value causes an appropriate step distance to be automatically
+calculated.
+
+.. seealso:: :py:func:`stepDistance`
+
+.. versionadded:: 4.2
+%End
+
+    double stepDistance() const;
+%Docstring
+Returns the profile step distance (in
+:py:func:`~QgsElevationProfileCanvas.crs` units).
+
+A NaN value indicates that an appropriate step distance will be
+automatically calculated.
+
+.. seealso:: :py:func:`setStepDistance`
+
+.. versionadded:: 4.2
 %End
 
     void setVisiblePlotRange( double minimumDistance, double maximumDistance, double minimumElevation, double maximumElevation );

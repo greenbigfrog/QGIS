@@ -24,6 +24,8 @@
 #include <QObject>
 #include <QPointer>
 
+#include <limits>
+
 class QgsProject;
 class QgsReadWriteContext;
 class QDomDocument;
@@ -150,6 +152,18 @@ class CORE_EXPORT QgsElevationProfile : public QObject
     double tolerance() const;
 
     /**
+     * Returns the profile step distance (in crs() units).
+     *
+     * This value determines the approximate maximum distance between sampled points
+     * along the profileCurve(). A NaN value indicates that an appropriate step
+     * distance will be automatically calculated.
+     *
+     * \see setStepDistance()
+     * \since QGIS 4.2
+     */
+    double stepDistance() const;
+
+    /**
      * Returns TRUE if the distance and elevation scales are locked to each other.
      *
      * \see setLockAxisScales()
@@ -207,6 +221,19 @@ class CORE_EXPORT QgsElevationProfile : public QObject
      * \see tolerance()
      */
     void setTolerance( double tolerance );
+
+    /**
+     * Sets the profile step \a distance (in crs() units).
+     *
+     * This value determines the approximate maximum distance between sampled points
+     * along the profileCurve(). A NaN value causes an appropriate step distance to
+     * be automatically calculated. Values must either be NaN or finite and greater
+     * than zero.
+     *
+     * \see stepDistance()
+     * \since QGIS 4.2
+     */
+    void setStepDistance( double distance );
 
     /**
      * Sets whether the distance and elevation scales are locked to each other.
@@ -271,6 +298,16 @@ class CORE_EXPORT QgsElevationProfile : public QObject
      */
     void toleranceChanged( double tolerance );
 
+    /**
+     * Emitted when the profile step distance is changed.
+     *
+     * \see stepDistance()
+     * \see setStepDistance()
+     *
+     * \since QGIS 4.2
+     */
+    void stepDistanceChanged( double distance );
+
   private slots:
 
     void dirtyProject();
@@ -287,6 +324,7 @@ class CORE_EXPORT QgsElevationProfile : public QObject
     bool mUseProjectLayerTree = false;
     std::unique_ptr<QgsCurve> mProfileCurve;
     double mTolerance = 0;
+    double mStepDistance = std::numeric_limits<double>::quiet_NaN();
     std::unique_ptr<QgsLineSymbol> mSubsectionsSymbol;
 };
 

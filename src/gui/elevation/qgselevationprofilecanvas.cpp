@@ -45,6 +45,8 @@
 #include <QTimer>
 #include <QWheelEvent>
 
+#include <cmath>
+
 #include "moc_qgselevationprofilecanvas.cpp"
 
 using namespace Qt::StringLiterals;
@@ -911,6 +913,7 @@ void QgsElevationProfileCanvas::refresh()
   QgsProfileRequest request( profileCurve()->clone() );
   request.setCrs( mCrs );
   request.setTolerance( mTolerance );
+  request.setStepDistance( mStepDistance );
   request.setTransformContext( mProject->transformContext() );
   request.setTerrainProvider( mProject->elevationProperties()->terrainProvider() ? mProject->elevationProperties()->terrainProvider()->clone() : nullptr );
   QgsExpressionContext context;
@@ -1176,6 +1179,17 @@ QgsCurve *QgsElevationProfileCanvas::profileCurve() const
 void QgsElevationProfileCanvas::setTolerance( double tolerance )
 {
   mTolerance = tolerance;
+}
+
+void QgsElevationProfileCanvas::setStepDistance( double distance )
+{
+  if ( !std::isnan( distance ) && ( !std::isfinite( distance ) || distance <= 0 ) )
+    return;
+
+  if ( ( std::isnan( distance ) && std::isnan( mStepDistance ) ) || qgsDoubleNear( distance, mStepDistance ) )
+    return;
+
+  mStepDistance = distance;
 }
 
 QgsCoordinateReferenceSystem QgsElevationProfileCanvas::crs() const

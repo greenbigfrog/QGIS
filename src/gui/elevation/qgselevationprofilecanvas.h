@@ -28,6 +28,8 @@
 #include "qgsplotcanvas.h"
 #include "qgsprofilepoint.h"
 
+#include <limits>
+
 class QgsElevationProfilePlotItem;
 class QgsElevationProfileCrossHairsItem;
 class QgsAbstractProfileResults;
@@ -179,6 +181,27 @@ class GUI_EXPORT QgsElevationProfileCanvas : public QgsPlotCanvas
      * \see setTolerance()
      */
     double tolerance() const { return mTolerance; }
+
+    /**
+     * Sets the profile step \a distance (in crs() units).
+     *
+     * A NaN value causes an appropriate step distance to be automatically calculated.
+     *
+     * \see stepDistance()
+     * \since QGIS 4.2
+     */
+    void setStepDistance( double distance );
+
+    /**
+     * Returns the profile step distance (in crs() units).
+     *
+     * A NaN value indicates that an appropriate step distance will be automatically
+     * calculated.
+     *
+     * \see setStepDistance()
+     * \since QGIS 4.2
+     */
+    double stepDistance() const { return mStepDistance; }
 
     /**
      * Sets the visible area of the plot.
@@ -415,6 +438,7 @@ class GUI_EXPORT QgsElevationProfileCanvas : public QgsPlotCanvas
 
     std::unique_ptr<QgsCurve> mProfileCurve;
     double mTolerance = 0;
+    double mStepDistance = std::numeric_limits<double>::quiet_NaN();
 
     bool mFirstDrawOccurred = false;
 

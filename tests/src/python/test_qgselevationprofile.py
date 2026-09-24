@@ -6,6 +6,7 @@ the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 """
 
+import math
 import unittest
 
 from qgis.core import (
@@ -52,6 +53,14 @@ class TestQgsElevationProfile(QgisTestCase):
         profile.setTolerance(5)
         self.assertEqual(profile.tolerance(), 5)
 
+        self.assertTrue(math.isnan(profile.stepDistance()))
+        step_distance_spy = QSignalSpy(profile.stepDistanceChanged)
+        profile.setStepDistance(2.5)
+        self.assertEqual(profile.stepDistance(), 2.5)
+        self.assertEqual(len(step_distance_spy), 1)
+        profile.setStepDistance(-1)
+        self.assertEqual(profile.stepDistance(), 2.5)
+        self.assertEqual(len(step_distance_spy), 1)
         profile.setLockAxisScales(True)
         self.assertTrue(profile.lockAxisScales())
 
@@ -79,6 +88,7 @@ class TestQgsElevationProfile(QgisTestCase):
         self.assertEqual(profile2.crs(), QgsCoordinateReferenceSystem("EPSG:3111"))
         self.assertEqual(profile2.profileCurve().asWkt(), "LineString (0 0, 10 2)")
         self.assertEqual(profile2.tolerance(), 5)
+        self.assertEqual(profile2.stepDistance(), 2.5)
         self.assertTrue(profile2.lockAxisScales())
         self.assertEqual(profile2.distanceUnit(), Qgis.DistanceUnit.Feet)
         self.assertEqual(profile2.subsectionsSymbol().color().name(), "#ff0000")
@@ -101,6 +111,18 @@ class TestQgsElevationProfile(QgisTestCase):
         )
         group = profile2.layerTree().findGroup("my group")
         self.assertEqual([l.name() for l in group.children()], ["l2"])
+
+        elem.removeAttribute("stepDistance")
+        profile3 = QgsElevationProfile(project)
+        self.assertTrue(profile3.readXml(elem, doc, context))
+        self.assertTrue(math.isnan(profile3.stepDistance()))
+
+        automatic_spy = QSignalSpy(profile3.stepDistanceChanged)
+        profile3.setStepDistance(1)
+        profile3.setStepDistance(float("nan"))
+        self.assertEqual(len(automatic_spy), 2)
+        profile3.setStepDistance(float("nan"))
+        self.assertEqual(len(automatic_spy), 2)
 
     def test_sync_project_layer_tree(self):
         project = QgsProject()

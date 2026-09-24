@@ -10,6 +10,7 @@
 
 
 
+
 class QgsElevationProfile : QObject
 {
 %Docstring(signature="appended")
@@ -138,6 +139,21 @@ results.
 .. seealso:: :py:func:`setTolerance`
 %End
 
+    double stepDistance() const;
+%Docstring
+Returns the profile step distance (in
+:py:func:`~QgsElevationProfile.crs` units).
+
+This value determines the approximate maximum distance between sampled
+points along the :py:func:`~QgsElevationProfile.profileCurve`. A NaN
+value indicates that an appropriate step distance will be automatically
+calculated.
+
+.. seealso:: :py:func:`setStepDistance`
+
+.. versionadded:: 4.2
+%End
+
     bool lockAxisScales() const;
 %Docstring
 Returns ``True`` if the distance and elevation scales are locked to each
@@ -203,6 +219,21 @@ results.
 .. seealso:: :py:func:`tolerance`
 %End
 
+    void setStepDistance( double distance );
+%Docstring
+Sets the profile step ``distance`` (in
+:py:func:`~QgsElevationProfile.crs` units).
+
+This value determines the approximate maximum distance between sampled
+points along the :py:func:`~QgsElevationProfile.profileCurve`. A NaN
+value causes an appropriate step distance to be automatically
+calculated. Values must either be NaN or finite and greater than zero.
+
+.. seealso:: :py:func:`stepDistance`
+
+.. versionadded:: 4.2
+%End
+
     void setLockAxisScales( bool lock );
 %Docstring
 Sets whether the distance and elevation scales are locked to each other.
@@ -266,6 +297,17 @@ Emitted when the profile tolerance is changed.
 .. seealso:: :py:func:`tolerance`
 
 .. seealso:: :py:func:`setTolerance`
+
+.. versionadded:: 4.2
+%End
+
+    void stepDistanceChanged( double distance );
+%Docstring
+Emitted when the profile step distance is changed.
+
+.. seealso:: :py:func:`stepDistance`
+
+.. seealso:: :py:func:`setStepDistance`
 
 .. versionadded:: 4.2
 %End
