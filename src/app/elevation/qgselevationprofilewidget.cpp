@@ -602,9 +602,7 @@ QgsElevationProfileWidget::QgsElevationProfileWidget( QgsElevationProfile *profi
 
   connect( QgsProject::instance()->elevationProperties(), &QgsProjectElevationProperties::changed, this, &QgsElevationProfileWidget::onProjectElevationPropertiesChanged );
   connect( QgsProject::instance(), &QgsProject::crs3DChanged, this, &QgsElevationProfileWidget::onProjectElevationPropertiesChanged );
-  connect( QgsProject::instance(), &QgsProject::crs3DChanged, this, [this] {
-    mStepDistanceSettingsAction->setDistanceUnit( QgsProject::instance()->crs3D().mapUnits() );
-  } );
+  connect( QgsProject::instance(), &QgsProject::crs3DChanged, this, [this] { mStepDistanceSettingsAction->setDistanceUnit( QgsProject::instance()->crs3D().mapUnits() ); } );
   mCanvas->setCrs( QgsProject::instance()->crs3D() );
 
   connect( mCanvas, &QgsElevationProfileCanvas::scaleChanged, this, [this] {
@@ -1561,16 +1559,20 @@ QgsElevationProfileStepDistanceWidgetSettingsAction::QgsElevationProfileStepDist
   mStepDistanceWidget->setClearValueMode( QgsDoubleSpinBox::MinimumValue, tr( "Automatic" ) );
   mStepDistanceWidget->setKeyboardTracking( false );
   mStepDistanceWidget->setMaximumWidth( QFontMetrics( mStepDistanceWidget->font() ).horizontalAdvance( '0' ) * 50 );
-  mStepDistanceWidget->setDecimals( 2 );
+  mStepDistanceWidget->setDecimals( 4 );
   mStepDistanceWidget->setRange( 0, 9999999999 );
   mStepDistanceWidget->setSingleStep( 1.0 );
 
-  QLabel *label = new QLabel( tr( "Sampling Step" ) );
+  QLabel *label = new QLabel( tr( "Sampling Interval" ) );
   gLayout->addWidget( label, 0, 0 );
   gLayout->addWidget( mStepDistanceWidget, 0, 1 );
 
   QWidget *w = new QWidget();
   w->setLayout( gLayout );
+  w->setToolTip( tr(
+    "Requested distance between samples along the profile. "
+    "The displayed profile may be simplified according to its resolution."
+  ) );
   setDefaultWidget( w );
 }
 
